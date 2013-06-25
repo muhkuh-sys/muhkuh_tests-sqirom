@@ -6,6 +6,7 @@ syntax: regexp
 ^scons.bat$
 ^scons.sh$
 ^site_scons/site_init.py$
+^build.properties$
 
 # Ignore all files in the targets folder.
 ^targets/
