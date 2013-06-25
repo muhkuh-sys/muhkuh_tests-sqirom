@@ -32,11 +32,14 @@ Import('env_default')
 # This is the list of sources. The elements must be separated with whitespace
 # (i.e. spaces, tabs, newlines). The amount of whitespace does not matter.
 sources = """
+	src/boot_drv_sqi.c
+	src/boot_spi.c
+	src/boot_sqi_xip.c
 	src/header.S
-	src/burst_access.s
 	src/init_netx_test.S
 	src/main.c
 	src/netx_test.c
+	src/options_default.c
 """
 
 
@@ -73,45 +76,31 @@ Import('platform_lib_netx500', 'platform_lib_netx56', 'platform_lib_netx50', 'pl
 #
 aCppPath = ['src', '#platform/src', '#platform/src/lib']
 
-env_netx500 = env_netx500_default.Clone()
-env_netx500.Replace(LDFILE = 'src/netx500/netx500.ld')
-env_netx500.Append(CPPPATH = aCppPath)
-src_netx500 = env_netx500.SetBuildPath('targets/netx500', 'src', sources)
-elf_netx500 = env_netx500.Elf('targets/netx500/ramtest.elf', src_netx500 + platform_lib_netx500)
-bin_netx500 = env_netx500.ObjCopy('targets/netx500/ramtest.bin', elf_netx500)
+#env_netx500 = env_netx500_default.Clone()
+#env_netx500.Replace(LDFILE = 'src/netx500/netx500.ld')
+#env_netx500.Append(CPPPATH = aCppPath)
+#src_netx500 = env_netx500.SetBuildPath('targets/netx500', 'src', sources)
+#elf_netx500 = env_netx500.Elf('targets/netx500/ramtest.elf', src_netx500 + platform_lib_netx500)
+#bin_netx500 = env_netx500.ObjCopy('targets/netx500/ramtest.bin', elf_netx500)
 
 env_netx56 = env_netx56_default.Clone()
 env_netx56.Replace(LDFILE = 'src/netx56/netx56.ld')
 env_netx56.Append(CPPPATH = aCppPath)
+env_netx56.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
 src_netx56 = env_netx56.SetBuildPath('targets/netx56', 'src', sources)
-elf_netx56 = env_netx56.Elf('targets/netx56/ramtest.elf', src_netx56 + platform_lib_netx56)
-bin_netx56 = env_netx56.ObjCopy('targets/netx56/ramtest.bin', elf_netx56)
+elf_netx56 = env_netx56.Elf('targets/netx56/sqitest.elf', src_netx56 + platform_lib_netx56)
+bin_netx56 = env_netx56.ObjCopy('targets/netx56/sqitest.bin', elf_netx56)
 
-env_netx50 = env_netx50_default.Clone()
-env_netx50.Replace(LDFILE = 'src/netx50/netx50.ld')
-env_netx50.Append(CPPPATH = aCppPath)
-src_netx50 = env_netx50.SetBuildPath('targets/netx50', 'src', sources)
-elf_netx50 = env_netx50.Elf('targets/netx50/ramtest.elf', src_netx50 + platform_lib_netx50)
-bin_netx50 = env_netx50.ObjCopy('targets/netx50/ramtest.bin', elf_netx50)
+#env_netx50 = env_netx50_default.Clone()
+#env_netx50.Replace(LDFILE = 'src/netx50/netx50.ld')
+#env_netx50.Append(CPPPATH = aCppPath)
+#src_netx50 = env_netx50.SetBuildPath('targets/netx50', 'src', sources)
+#elf_netx50 = env_netx50.Elf('targets/netx50/ramtest.elf', src_netx50 + platform_lib_netx50)
+#bin_netx50 = env_netx50.ObjCopy('targets/netx50/ramtest.bin', elf_netx50)
 
-env_netx10 = env_netx10_default.Clone()
-env_netx10.Replace(LDFILE = 'src/netx10/netx10.ld')
-env_netx10.Append(CPPPATH = aCppPath)
-src_netx10 = env_netx10.SetBuildPath('targets/netx10', 'src', sources)
-elf_netx10 = env_netx10.Elf('targets/netx10/ramtest.elf', src_netx10 + platform_lib_netx10)
-bin_netx10 = env_netx10.ObjCopy('targets/netx10/ramtest.bin', elf_netx10)
-
-
-#----------------------------------------------------------------------------
-#
-# Make a local demo installation.
-#
-# Copy all public binaries.
-Command('targets/testbench/netx/ramtest_netx10.bin',  bin_netx10,  Copy("$TARGET", "$SOURCE"))
-Command('targets/testbench/netx/ramtest_netx50.bin',  bin_netx50,  Copy("$TARGET", "$SOURCE"))
-Command('targets/testbench/netx/ramtest_netx56.bin',  bin_netx56,  Copy("$TARGET", "$SOURCE"))
-Command('targets/testbench/netx/ramtest_netx500.bin', bin_netx500, Copy("$TARGET", "$SOURCE"))
-
-# Copy all LUA scripts.
-Command('targets/testbench/ramtest_IS42S32800B.lua',  'lua/ramtest_IS42S32800B.lua', Copy("$TARGET", "$SOURCE"))
-Command('targets/testbench/ramtest_MT48LC2M32.lua',   'lua/ramtest_MT48LC2M32.lua',  Copy("$TARGET", "$SOURCE"))
+#env_netx10 = env_netx10_default.Clone()
+#env_netx10.Replace(LDFILE = 'src/netx10/netx10.ld')
+#env_netx10.Append(CPPPATH = aCppPath)
+#src_netx10 = env_netx10.SetBuildPath('targets/netx10', 'src', sources)
+#elf_netx10 = env_netx10.Elf('targets/netx10/ramtest.elf', src_netx10 + platform_lib_netx10)
+#bin_netx10 = env_netx10.ObjCopy('targets/netx10/ramtest.bin', elf_netx10)
