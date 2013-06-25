@@ -12,10 +12,9 @@
 
 #include "boot_drv_sqi.h"
 
-#include "console_io.h"
 #include "netx_io_areas.h"
 #include "options.h"
-#include "tools.h"
+#include "uprintf.h"
 
 
 #if CFG_DEBUGMSG==1
@@ -36,7 +35,7 @@
 	#define ZONE_INIT		DEBUGZONE(DBG_ZONE_INIT)
 	#define ZONE_VERBOSE		DEBUGZONE(DBG_ZONE_VERBOSE)
 
-	#define DEBUGMSG(cond,...) ((void)((cond)?(uprintf(IDH_DEBUG,__VA_ARGS__)),1:0))
+	#define DEBUGMSG(cond,...) ((void)((cond)?(uprintf(__VA_ARGS__)),1:0))
 #else
 	#define DEBUGMSG(cond,...) ((void)0)
 #endif
@@ -352,11 +351,11 @@ static int qsi_set_new_speed(unsigned long ulDeviceSpecificSpeed)
 	/* All irrelevant bits must be 0. */
 	if( (ulDeviceSpecificSpeed&(~(HOSTMSK(sqi_cr0_sck_muladd)|HOSTMSK(sqi_cr0_filter_in))))!=0 )
 	{
-		DEBUGMSG(ZONE_VERBOSE, _U(". new device specific speed has bits set in should-be-zero fields.\n"));
+		DEBUGMSG(ZONE_VERBOSE, ". new device specific speed has bits set in should-be-zero fields.\n");
 	}
 	else if( ulDeviceSpecificSpeed==0 )
 	{
-		DEBUGMSG(ZONE_VERBOSE, _U(". new device specific speed is 0. This is invalid for this unit!\n"));
+		DEBUGMSG(ZONE_VERBOSE, ". new device specific speed is 0. This is invalid for this unit!\n");
 	}
 	else
 	{

@@ -10,8 +10,8 @@
 
 #include <stddef.h>
 
-#include "boot_common.h"
 #include "boot_spi.h"
+#include "netx_test.h"
 
 
 #ifndef __SQI_H__
@@ -72,8 +72,8 @@ typedef struct STRUCT_QSI_CFG
 } QSI_CFG_T;
 
 
-BOOTING_T boot_sqi_xip(void);
+TEST_RESULT_T boot_sqi_xip(unsigned long ulOffset, unsigned long ulSize, unsigned char *pucBuffer);
 
 
-#endif	/* __SQI_H__ */
+#endif  /* __SQI_H__ */
 

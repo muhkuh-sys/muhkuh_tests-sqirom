@@ -12,12 +12,10 @@
 
 #include "boot_sqi_xip.h"
 
-#include "bootblock_oldstyle.h"
 #include "boot_drv_sqi.h"
-#include "console_io.h"
-#include "memory.h"
 #include "netx_io_areas.h"
 #include "options.h"
+#include "uprintf.h"
 
 
 #if CFG_DEBUGMSG==1
@@ -38,7 +36,7 @@
 	#define ZONE_INIT		DEBUGZONE(DBG_ZONE_INIT)
 	#define ZONE_VERBOSE		DEBUGZONE(DBG_ZONE_VERBOSE)
 
-	#define DEBUGMSG(cond,...) ((void)((cond)?(uprintf(IDH_DEBUG,__VA_ARGS__)),1:0))
+	#define DEBUGMSG(cond,...) ((void)((cond)?(uprintf(__VA_ARGS__)),1:0))
 #else
 	#define DEBUGMSG(cond,...) ((void)0)
 #endif
@@ -46,7 +44,7 @@
 
 static void qsi_seq_reset_input_buffer(QSI_CFG_T *ptQsiCfg)
 {
-	DEBUGMSG(ZONE_VERBOSE, _U(". reset the input buffer.\n"));
+	DEBUGMSG(ZONE_VERBOSE, ". reset the input buffer.\n");
 
 	ptQsiCfg->sizBufferPos = 0;
 	memset(ptQsiCfg->uBuffer.auc, 0, sizeof(ptQsiCfg->uBuffer.auc));
@@ -67,13 +65,13 @@ static int qsi_seq_compare(QSI_CFG_T *ptQsiCfg, size_t sizSeq, const unsigned ch
 	pucBuf = ptQsiCfg->uBuffer.auc;
 
 #if CFG_DEBUGMSG==1
-	DEBUGMSG(ZONE_VERBOSE, _U(". compare buffer with sequence.\n"));
-	DEBUGMSG(ZONE_VERBOSE, _U(". buffer:\n"));
+	DEBUGMSG(ZONE_VERBOSE, ". compare buffer with sequence.\n");
+	DEBUGMSG(ZONE_VERBOSE, ". buffer:\n");
 	if( ZONE_VERBOSE )
 	{
 		hexdump(pucBuf, sizSeq);
 	}
-	DEBUGMSG(ZONE_VERBOSE, _U(". Compare sequence:\n"));
+	DEBUGMSG(ZONE_VERBOSE, ". Compare sequence:\n");
 	if( ZONE_VERBOSE )
 	{
 		hexdump(pucSeq, sizSeq);
@@ -91,11 +89,11 @@ static int qsi_seq_compare(QSI_CFG_T *ptQsiCfg, size_t sizSeq, const unsigned ch
 
 	if( iResult==0 )
 	{
-		DEBUGMSG(ZONE_VERBOSE, _U(". Ok!\n"));
+		DEBUGMSG(ZONE_VERBOSE, ". Ok!\n");
 	}
 	else
 	{
-		DEBUGMSG(ZONE_ERROR, _U("! Buffer and sequence differ!\n"));
+		DEBUGMSG(ZONE_ERROR, "! Buffer and sequence differ!\n");
 	}
 
 	return iResult;
@@ -112,13 +110,13 @@ static void qsi_seq_mask(QSI_CFG_T *ptQsiCfg, size_t sizSeq, const unsigned char
 	pucBuf = ptQsiCfg->uBuffer.auc;
 
 #if CFG_DEBUGMSG==1
-	DEBUGMSG(ZONE_VERBOSE, _U(". Mask the buffer.\n"));
-	DEBUGMSG(ZONE_VERBOSE, _U(". Buffer: \n"));
+	DEBUGMSG(ZONE_VERBOSE, ". Mask the buffer.\n");
+	DEBUGMSG(ZONE_VERBOSE, ". Buffer: \n");
 	if( ZONE_VERBOSE )
 	{
 		hexdump(pucBuf, sizSeq);
 	}
-	DEBUGMSG(ZONE_VERBOSE, _U(". Mask sequence:\n"));
+	DEBUGMSG(ZONE_VERBOSE, ". Mask sequence:\n");
 	if( ZONE_VERBOSE )
 	{
 		hexdump(pucSeq, sizSeq);
@@ -131,7 +129,7 @@ static void qsi_seq_mask(QSI_CFG_T *ptQsiCfg, size_t sizSeq, const unsigned char
 	}
 
 #if CFG_DEBUGMSG==1
-	DEBUGMSG(ZONE_VERBOSE, _U(". Masked Buffer: \n"));
+	DEBUGMSG(ZONE_VERBOSE, ". Masked Buffer: \n");
 	if( ZONE_VERBOSE )
 	{
 		hexdump(ptQsiCfg->uBuffer.auc, sizSeq);
@@ -177,7 +175,7 @@ static void qsi_receive(QSI_CFG_T *ptQsiCfg, unsigned int uiParameter)
 			/* grab byte */
 			ucByte = (unsigned char)(ptSqiArea->ulSqi_dr);
 			ptQsiCfg->uBuffer.auc[sizBufferPos] = ucByte;
-			DEBUGMSG(ZONE_VERBOSE, _U(". rec $%02x\n"), ucByte);
+			DEBUGMSG(ZONE_VERBOSE, ". rec $%02x\n", ucByte);
 			/* move and wrap buffer pointer */
 			++sizBufferPos;
 			sizBufferPos &= 0x0f;
@@ -198,7 +196,7 @@ static void qsi_receive(QSI_CFG_T *ptQsiCfg, unsigned int uiParameter)
 
 			/* get the dword */
 			ulData = ptSqiArea->ulSqi_dr;
-			DEBUGMSG(ZONE_VERBOSE, _U("received dw: $%08x\n"), ulData);
+			DEBUGMSG(ZONE_VERBOSE, "received dw: $%08x\n", ulData);
 
 			/* process the dword */
 			uiByteCnt = 4;
@@ -207,7 +205,7 @@ static void qsi_receive(QSI_CFG_T *ptQsiCfg, unsigned int uiParameter)
 				/* grab byte */
 				ucByte = (unsigned char)ulData;
 				ptQsiCfg->uBuffer.auc[sizBufferPos] = ucByte;
-				DEBUGMSG(ZONE_VERBOSE, _U(". rec $%02x\n"), ucByte);
+				DEBUGMSG(ZONE_VERBOSE, ". rec $%02x\n", ucByte);
 				/* move to next byte */
 				ulData >>= 8;
 				--uiByteCnt;
@@ -241,7 +239,7 @@ static void qsi_send(QSI_CFG_T *ptQsiCfg, unsigned int uiParameter, const unsign
 	unsigned long ulSend;
 
 
-	DEBUGMSG(ZONE_VERBOSE, _U(". sending %d bytes\n"), uiParameter+1);
+	DEBUGMSG(ZONE_VERBOSE, ". sending %d bytes\n", uiParameter+1);
 
 	/* set mode to "send" */
 	ulValue  = ptQsiCfg->tCfg.ulTrcBase;
@@ -268,7 +266,7 @@ static void qsi_send(QSI_CFG_T *ptQsiCfg, unsigned int uiParameter, const unsign
 			/* send byte */
 			ucSend = *(pucData++);
 			ptSqiArea->ulSqi_dr = ucSend;
-			DEBUGMSG(ZONE_VERBOSE, _U(". send $%02x\n"), ucSend);
+			DEBUGMSG(ZONE_VERBOSE, ". send $%02x\n", ucSend);
 		} while( (uiParameter--)>0 );
 	}
 	else
@@ -295,7 +293,7 @@ static void qsi_send(QSI_CFG_T *ptQsiCfg, unsigned int uiParameter, const unsign
 			} while( ulValue!=0 );
 			/* send DWORD */
 			ptSqiArea->ulSqi_dr = ulSend;
-			DEBUGMSG(ZONE_VERBOSE, _U(". send $%08x\n"), ulSend);
+			DEBUGMSG(ZONE_VERBOSE, ". send $%08x\n", ulSend);
 		} while( uiParameter!=0 );
 	}
 
@@ -345,7 +343,7 @@ static int qsi_seq_set_mode(QSI_CFG_T *ptQsiCfg, unsigned int uiMode)
 
 
 	/* switch to mode (0=1bit, 1=2bit, 2=4bit) */
-	DEBUGMSG(ZONE_VERBOSE, _U("Mode: %d\n"), uiMode);
+	DEBUGMSG(ZONE_VERBOSE, "Mode: %d\n", uiMode);
 
 	/* expect success */
 	iResult = 0;
@@ -445,7 +443,7 @@ static int execute_sequence(QSI_CFG_T *ptCfg, const unsigned char *pucSeq)
 			{
 				/* the sequence does not fit into the remaining buffer */
 				/* this is an error in the seqnence */
-				DEBUGMSG(ZONE_ERROR, _U("! cmp argument too large!\n"));
+				DEBUGMSG(ZONE_ERROR, "! cmp argument too large!\n");
 				iResult = -1;
 			}
 			else
@@ -469,7 +467,7 @@ static int execute_sequence(QSI_CFG_T *ptCfg, const unsigned char *pucSeq)
 			{
 				/* the skip size does not fit into the remaining buffer */
 				/* this is an error in the seqence */
-				DEBUGMSG(ZONE_ERROR, _U("! mask argument too large!\n"));
+				DEBUGMSG(ZONE_ERROR, "! mask argument too large!\n");
 				iResult = -1;
 			}
 			else
@@ -489,7 +487,7 @@ static int execute_sequence(QSI_CFG_T *ptCfg, const unsigned char *pucSeq)
 			{
 				if( ptCfg->tCfg.pfnSelect(&(ptCfg->tCfg), 1)==0 )
 				{
-					DEBUGMSG(ZONE_VERBOSE, _U(". select the slave.\n"));
+					DEBUGMSG(ZONE_VERBOSE, ". select the slave.\n");
 					qsi_seq_reset_input_buffer(ptCfg);
 				}
 			}
@@ -497,7 +495,7 @@ static int execute_sequence(QSI_CFG_T *ptCfg, const unsigned char *pucSeq)
 			pucCnt += uiParameter + 1;
 			if( tQsiCmd>=QSI_SEND_SDN )
 			{
-				DEBUGMSG(ZONE_VERBOSE, _U(". deselect the slave\n"));
+				DEBUGMSG(ZONE_VERBOSE, ". deselect the slave\n");
 				ptCfg->tCfg.pfnSelect(&(ptCfg->tCfg), 0);
 				if( tQsiCmd>=QSI_SEND_SDD )
 				{
@@ -516,14 +514,14 @@ static int execute_sequence(QSI_CFG_T *ptCfg, const unsigned char *pucSeq)
 			{
 				if( ptCfg->tCfg.pfnSelect(&(ptCfg->tCfg), 1)==0 )
 				{
-					DEBUGMSG(ZONE_VERBOSE, _U(". select the slave.\n"));
+					DEBUGMSG(ZONE_VERBOSE, ". select the slave.\n");
 					qsi_seq_reset_input_buffer(ptCfg);
 				}
 			}
 			qsi_receive(ptCfg, uiParameter);
 			if( tQsiCmd>=QSI_RECEIVE_SDN )
 			{
-				DEBUGMSG(ZONE_VERBOSE, _U(". deselect the slave\n"));
+				DEBUGMSG(ZONE_VERBOSE, ". deselect the slave\n");
 				ptCfg->tCfg.pfnSelect(&(ptCfg->tCfg), 0);
 				if( tQsiCmd>=QSI_RECEIVE_SDD )
 				{
@@ -542,14 +540,14 @@ static int execute_sequence(QSI_CFG_T *ptCfg, const unsigned char *pucSeq)
 			{
 				if( ptCfg->tCfg.pfnSelect(&(ptCfg->tCfg), 1)==0 )
 				{
-					DEBUGMSG(ZONE_VERBOSE, _U(". select the slave.\n"));
+					DEBUGMSG(ZONE_VERBOSE, ". select the slave.\n");
 					qsi_seq_reset_input_buffer(ptCfg);
 				}
 			}
 			ptCfg->tCfg.pfnSendIdle(&(ptCfg->tCfg), uiParameter);
 			if( tQsiCmd>=QSI_DUMMY_SDN )
 			{
-				DEBUGMSG(ZONE_VERBOSE, _U(". deselect the slave\n"));
+				DEBUGMSG(ZONE_VERBOSE, ". deselect the slave\n");
 				ptCfg->tCfg.pfnSelect(&(ptCfg->tCfg), 0);
 				if( tQsiCmd>=QSI_DUMMY_SDD )
 				{
@@ -568,26 +566,26 @@ static int execute_sequence(QSI_CFG_T *ptCfg, const unsigned char *pucSeq)
 			{
 				/* the skip size does not fit into the remaining buffer */
 				/* this is an error in the seqence */
-				DEBUGMSG(ZONE_ERROR, _U("! skip argument too large!\n"));
+				DEBUGMSG(ZONE_ERROR, "! skip argument too large!\n");
 				iResult = -1;
 			}
 			else
 			{
 				if( (tQsiCmd==QSI_SKIP_EQ && iLastCompareResult==0) || (tQsiCmd==QSI_SKIP_NE && iLastCompareResult!=0) )
 				{
-					DEBUGMSG(ZONE_VERBOSE, _U(". Skipping %d bytes\n"), uiParameter);
+					DEBUGMSG(ZONE_VERBOSE, ". Skipping %d bytes\n", uiParameter);
 					pucCnt += uiParameter;
 				}
 				else
 				{
-					DEBUGMSG(ZONE_VERBOSE, _U(". Not skipping.\n"));
+					DEBUGMSG(ZONE_VERBOSE, ". Not skipping.\n");
 				}
 			}
 			break;
 
 
 		default:
-			DEBUGMSG(ZONE_ERROR, _U("! unknown command: $%02x\n"), tQsiCmd);
+			DEBUGMSG(ZONE_ERROR, "! unknown command: $%02x\n", tQsiCmd);
 			iResult = -1;
 			break;
 		}
@@ -597,18 +595,19 @@ static int execute_sequence(QSI_CFG_T *ptCfg, const unsigned char *pucSeq)
 }
 
 
+unsigned long aulBuffer[16];
 
-BOOTING_T boot_sqi_xip(void)
+TEST_RESULT_T boot_sqi_xip(unsigned long ulOffset, unsigned long ulSize, unsigned char *pucBuffer)
 {
 	HOSTDEF(ptSqiArea)
 	HOSTDEF(ptAsicCtrlArea)
-	BOOTING_T tResult;
+	TEST_RESULT_T tResult;
 	unsigned long ulValue;
 	int iResult;
 	QSI_CFG_T tQsiCfg;
 	unsigned long ulChecksum;
 	/* the load address of an SQI XIP image must be at the start of sqirom right after the bootblock */
-	const unsigned long * const pulSqiXipAddress = (const unsigned long * const)(HOSTADDR(sqirom)+sizeof(BOOTBLOCK_OLDSTYLE_T));
+	const unsigned char * const pucSqiXipAddress = (const unsigned char * const)(HOSTADDR(sqirom));
 	/* the chipselect is fixed to 0 */
 	const unsigned int uiSqiXipChipselect = 0;
 
@@ -622,8 +621,8 @@ BOOTING_T boot_sqi_xip(void)
 	ulValue &= HOSTMSK(io_config2_mask_sel_sqi);
 	if( ulValue==0 )
 	{
-		DEBUGMSG(ZONE_VERBOSE, _U("The sqirom pins can not be muxed out. Booting disabled!\n"));
-		tResult = BOOTING_Not_Allowed;
+		DEBUGMSG(ZONE_VERBOSE, "The sqirom pins can not be muxed out. Booting disabled!\n");
+		tResult = TEST_RESULT_ERROR;
 	}
 	else
 #endif
@@ -636,15 +635,15 @@ BOOTING_T boot_sqi_xip(void)
 		ulValue &= HOSTMSK(sqi_sqirom_cfg_enable);
 		if( ulValue==0 )
 		{
-			DEBUGMSG(ZONE_VERBOSE, _U("The sqirom enable bit is not set. Booting disabled!\n"));
-			tResult = BOOTING_Not_Allowed;
+			DEBUGMSG(ZONE_VERBOSE, "The sqirom enable bit is not set. Booting disabled!\n");
+			tResult = TEST_RESULT_ERROR;
 		}
 		else
 		{
 			/* Init the config and the unit.*/
 			boot_drv_sqi_init(&(tQsiCfg.tCfg), &(g_t_romloader_options.t_sqi_options.tSpiCfg), uiSqiXipChipselect);
 
-			DEBUGMSG(ZONE_VERBOSE, _U("*** sending init seq ***\n"));
+			DEBUGMSG(ZONE_VERBOSE, "*** sending init seq ***\n");
 
 			/* init the address */
 			tQsiCfg.ulAddress = 0;
@@ -663,101 +662,34 @@ BOOTING_T boot_sqi_xip(void)
 			iResult = execute_sequence(&tQsiCfg, g_t_romloader_options.t_sqi_options.tSeqId);
 			if( iResult!=0 )
 			{
-				DEBUGMSG(ZONE_ERROR, _U("error executing the id sequence: %d\n"), iResult);
-				tResult = BOOTING_Cookie_Invalid;
+				DEBUGMSG(ZONE_ERROR, "error executing the id sequence: %d\n", iResult);
+				tResult = TEST_RESULT_ERROR;
 			}
 			else
 			{
-				DEBUGMSG(ZONE_VERBOSE, _U("*** sending read seq ***\n"));
+				DEBUGMSG(ZONE_VERBOSE, "*** sending read seq ***\n");
 				iResult = execute_sequence(&tQsiCfg, g_t_romloader_options.t_sqi_options.tSeqRead);
 				if( iResult!=0 )
 				{
-					DEBUGMSG(ZONE_ERROR, _U("error executing the read sequence: %d\n"), iResult);
-					tResult = BOOTING_Cookie_Invalid;
+					DEBUGMSG(ZONE_ERROR, "error executing the read sequence: %d\n", iResult);
+					tResult = TEST_RESULT_ERROR;
 				}
 				else
 				{
 					/* receive the complete bootblock */
-					ulChecksum = tQsiCfg.tCfg.pfnReadSimpleChecksum(&(tQsiCfg.tCfg), tOldstyleBootblock.aul, sizeof(BOOTBLOCK_OLDSTYLE_T)/sizeof(unsigned long));
+					tQsiCfg.tCfg.pfnReadSimpleChecksum(&(tQsiCfg.tCfg), aulBuffer, (sizeof(aulBuffer)/sizeof(aulBuffer[0])));
 
-#if CFG_DEBUGMSG==1
-					DEBUGMSG(ZONE_VERBOSE, _U("received bootblock with checksum 0x%08x:\n"), ulChecksum);
-					if( ZONE_VERBOSE )
-					{
-						hexdump(tOldstyleBootblock.auc, sizeof(BOOTBLOCK_OLDSTYLE_T));
-					}
-#endif
+					/* deselect the chip and send idles */
+					tQsiCfg.tCfg.pfnSelect(&(tQsiCfg.tCfg), 0U);
+					tQsiCfg.tCfg.pfnSendIdle(&(tQsiCfg.tCfg), 0U);
 
-					/* the checksum over the complete bootblock must be 0 */
-					if(  ulChecksum!=0 )
-					{
-						DEBUGMSG(ZONE_VERBOSE, _U("The checksum is invalid.\n"));
-						tResult = BOOTING_Header_Checksum_Invalid;
-					}
-					/* test the magic cookie */
-					else if( tOldstyleBootblock.s.ulMagic!=BOOTBLOCK_OLDSTYLE_MAGIC )
-					{
-						DEBUGMSG(ZONE_VERBOSE, _U("The cookie is invalid: 0x%08x\n"), tOldstyleBootblock.s.ulMagic);
-						tResult = BOOTING_Cookie_Invalid;
-					}
-					else
-					{
-						/* test the signature */
-						if( tOldstyleBootblock.s.ulSignature==BOOTBLOCK_OLDSTYLE_SIGNATURE )
-						{
-							DEBUGMSG(ZONE_VERBOSE, _U("Found old signature.\n"));
+					/* activate the sqi xip unit */
+					ptSqiArea->ulSqi_sqirom_cfg = tQsiCfg.ulSqiRomCfg;
 
-							/* apply the bootblock setting */
-							bootblock_oldstyle_process(&tOldstyleBootblock);
-							memory_setup_all_devices();
+//					hexdump(pucSqiXipAddress+ulOffset, ulSize);
+					memcpy(pucBuffer, pucSqiXipAddress+ulOffset, ulSize);
 
-							/* NOTE: do not use the bootblock's spi speed settings, it is only for spi and not sqi! */
-
-							/* deselect the chip and send idles */
-							tQsiCfg.tCfg.pfnSelect(&(tQsiCfg.tCfg), 0U);
-							tQsiCfg.tCfg.pfnSendIdle(&(tQsiCfg.tCfg), 0U);
-
-							/* activate the sqi xip unit */
-							ptSqiArea->ulSqi_sqirom_cfg = tQsiCfg.ulSqiRomCfg;
-
-							/* build the application checksum */
-							ulChecksum = bootblock_oldstyle_processed_mmapped_image(pulSqiXipAddress);
-							/* was the application checksum correct? */
-							if( ulChecksum!=0 )
-							{
-								tResult = BOOTING_Application_Checksum_Invalid;
-							}
-							else
-							{
-								/* start the firmware */
-								bootblock_oldstyle_jump_to_firmware(BOOTOPTION_SpiFlash);
-								tResult = BOOTING_Ok;
-							}
-						}
-						else if( tOldstyleBootblock.s.ulSignature==BOOTBLOCK_HBOOT_SIGNATURE )
-						{
-							DEBUGMSG(ZONE_VERBOSE, _U("Found new signature.\n"));
-
-							/*
-							* The bootblock is ok!
-							*/
-
-							/* deselect the chip and send idles */
-							tQsiCfg.tCfg.pfnSelect(&(tQsiCfg.tCfg), 0U);
-							tQsiCfg.tCfg.pfnSendIdle(&(tQsiCfg.tCfg), 0U);
-
-							/* activate the sqi xip unit */
-							ptSqiArea->ulSqi_sqirom_cfg = tQsiCfg.ulSqiRomCfg;
-
-							/* process a memory mapped hboot image */
-							tResult = boot_process_mmapped_hboot_image(pulSqiXipAddress);
-						}
-						else
-						{
-							DEBUGMSG(ZONE_VERBOSE, _U("The signature is invalid: 0x%08x\n"), tOldstyleBootblock.s.ulSignature);
-							tResult = BOOTING_File_Signature_Invalid;
-						}
-					}
+					tResult = TEST_RESULT_OK;
 				}
 
 				/* deselect the chip and send idles */
@@ -767,11 +699,11 @@ BOOTING_T boot_sqi_xip(void)
 				/* deactivate the sqi xip unit */
 				ptSqiArea->ulSqi_sqirom_cfg = 0;
 
-				DEBUGMSG(ZONE_VERBOSE, _U("*** sending deactivate seq ***\n"));
+				DEBUGMSG(ZONE_VERBOSE, "*** sending deactivate seq ***\n");
 				iResult = execute_sequence(&tQsiCfg, g_t_romloader_options.t_sqi_options.tSeqDeactivate);
 				if( iResult!=0 )
 				{
-					DEBUGMSG(ZONE_ERROR, _U("error executing the deactivate sequence: %d\n"), iResult);
+					DEBUGMSG(ZONE_ERROR, "error executing the deactivate sequence: %d\n", iResult);
 				}
 			}
 
