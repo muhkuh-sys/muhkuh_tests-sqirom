@@ -31,17 +31,25 @@ Import('env_default')
 #----------------------------------------------------------------------------
 # This is the list of sources. The elements must be separated with whitespace
 # (i.e. spaces, tabs, newlines). The amount of whitespace does not matter.
-sources = """
+sources_common = """
 	src/boot_drv_sqi.c
 	src/boot_spi.c
 	src/boot_sqi_xip.c
 	src/header.S
-	src/init_netx_test.S
-	src/main.c
-	src/netx_test.c
 	src/options_default.c
 """
 
+sources_muhkuh = """
+	src/init_netx_test.S
+	src/main.c
+	src/netx_test.c
+"""
+
+sources_standalone = """
+	src/init_netx_test.S
+	src/main.c
+	src/netx_test.c
+"""
 
 #----------------------------------------------------------------------------
 #
@@ -83,13 +91,21 @@ aCppPath = ['src', '#platform/src', '#platform/src/lib']
 #elf_netx500 = env_netx500.Elf('targets/netx500/ramtest.elf', src_netx500 + platform_lib_netx500)
 #bin_netx500 = env_netx500.ObjCopy('targets/netx500/ramtest.bin', elf_netx500)
 
-env_netx56 = env_netx56_default.Clone()
-env_netx56.Replace(LDFILE = 'src/netx56/netx56.ld')
-env_netx56.Append(CPPPATH = aCppPath)
-env_netx56.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-src_netx56 = env_netx56.SetBuildPath('targets/netx56', 'src', sources)
-elf_netx56 = env_netx56.Elf('targets/netx56/sqitest.elf', src_netx56 + platform_lib_netx56)
-bin_netx56 = env_netx56.ObjCopy('targets/netx56/sqitest.bin', elf_netx56)
+env_netx56_m = env_netx56_default.Clone()
+env_netx56_m.Replace(LDFILE = 'src/netx56/netx56.ld')
+env_netx56_m.Append(CPPPATH = aCppPath)
+env_netx56_m.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+src_netx56_m = env_netx56_m.SetBuildPath('targets/netx56_muhkuh', 'src', sources_common+sources_muhkuh)
+elf_netx56_m = env_netx56_m.Elf('targets/netx56_muhkuh/sqitest.elf', src_netx56_m + platform_lib_netx56)
+bin_netx56_m = env_netx56_m.ObjCopy('targets/netx56_muhkuh/sqitest.bin', elf_netx56_m)
+
+env_netx56_s = env_netx56_default.Clone()
+env_netx56_s.Replace(LDFILE = 'src/netx56/netx56.ld')
+env_netx56_s.Append(CPPPATH = aCppPath)
+env_netx56_s.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+src_netx56_s = env_netx56_s.SetBuildPath('targets/netx56_standalone', 'src', sources_common+sources_standalone)
+elf_netx56_s = env_netx56_s.Elf('targets/netx56_standalone/sqitest.elf', src_netx56_s + platform_lib_netx56)
+bin_netx56_s = env_netx56_s.ObjCopy('targets/netx56_standalone/sqitest.bin', elf_netx56_s)
 
 #env_netx50 = env_netx50_default.Clone()
 #env_netx50.Replace(LDFILE = 'src/netx50/netx50.ld')
