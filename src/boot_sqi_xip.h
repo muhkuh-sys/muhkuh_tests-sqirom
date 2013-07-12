@@ -72,8 +72,8 @@ typedef struct STRUCT_QSI_CFG
 } QSI_CFG_T;
 
 
-TEST_RESULT_T boot_sqi_xip(unsigned long ulOffset, unsigned long ulSize, unsigned char *pucBuffer);
-
+TEST_RESULT_T boot_sqi_xip(QSI_CFG_T *ptQsiCfg);
+void deactivate_sqi(QSI_CFG_T *ptQsiCfg);
 
 #endif  /* __SQI_H__ */
 

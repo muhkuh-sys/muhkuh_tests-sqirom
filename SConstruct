@@ -46,9 +46,8 @@ sources_muhkuh = """
 """
 
 sources_standalone = """
-	src/init_netx_test.S
-	src/main.c
-	src/netx_test.c
+	src/init_standalone.S
+	src/main_standalone.c
 """
 
 #----------------------------------------------------------------------------
@@ -105,7 +104,7 @@ env_netx56_s.Append(CPPPATH = aCppPath)
 env_netx56_s.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
 src_netx56_s = env_netx56_s.SetBuildPath('targets/netx56_standalone', 'src', sources_common+sources_standalone)
 elf_netx56_s = env_netx56_s.Elf('targets/netx56_standalone/sqitest.elf', src_netx56_s + platform_lib_netx56)
-bin_netx56_s = env_netx56_s.ObjCopy('targets/netx56_standalone/sqitest.bin', elf_netx56_s)
+bb0_netx56_s = env_netx56_s.BootBlock('targets/netx56_spi_intram.img', elf_netx56_s, BOOTBLOCK_SRC='SPI_GEN_10', BOOTBLOCK_DST='INTRAM')
 
 #env_netx50 = env_netx50_default.Clone()
 #env_netx50.Replace(LDFILE = 'src/netx50/netx50.ld')

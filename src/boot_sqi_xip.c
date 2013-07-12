@@ -597,18 +597,15 @@ static int execute_sequence(QSI_CFG_T *ptCfg, const unsigned char *pucSeq)
 
 unsigned long aulBuffer[16];
 
-TEST_RESULT_T boot_sqi_xip(unsigned long ulOffset, unsigned long ulSize, unsigned char *pucBuffer)
+TEST_RESULT_T boot_sqi_xip(QSI_CFG_T *ptQsiCfg)
 {
-	HOSTDEF(ptSqiArea)
-	HOSTDEF(ptAsicCtrlArea)
+	HOSTDEF(ptSqiArea);
+	HOSTDEF(ptAsicCtrlArea);
 	TEST_RESULT_T tResult;
 	unsigned long ulValue;
 	int iResult;
-	QSI_CFG_T tQsiCfg;
 	unsigned long ulChecksum;
-	/* the load address of an SQI XIP image must be at the start of sqirom right after the bootblock */
-	const unsigned char * const pucSqiXipAddress = (const unsigned char * const)(HOSTADDR(sqirom));
-	/* the chipselect is fixed to 0 */
+	/* the chip select is fixed to 0 */
 	const unsigned int uiSqiXipChipselect = 0;
 
 
@@ -627,9 +624,9 @@ TEST_RESULT_T boot_sqi_xip(unsigned long ulOffset, unsigned long ulSize, unsigne
 	else
 #endif
 	{
-		/* copy the xip configuration */
+		/* Copy the XIP configuration. */
 		ulValue = g_t_romloader_options.t_sqi_options.ulSqiRomCfg;
-		tQsiCfg.ulSqiRomCfg = ulValue;
+		ptQsiCfg->ulSqiRomCfg = ulValue;
 
 		/* is the configuration valid? */
 		ulValue &= HOSTMSK(sqi_sqirom_cfg_enable);
@@ -641,12 +638,12 @@ TEST_RESULT_T boot_sqi_xip(unsigned long ulOffset, unsigned long ulSize, unsigne
 		else
 		{
 			/* Init the config and the unit.*/
-			boot_drv_sqi_init(&(tQsiCfg.tCfg), &(g_t_romloader_options.t_sqi_options.tSpiCfg), uiSqiXipChipselect);
+			boot_drv_sqi_init(&(ptQsiCfg->tCfg), &(g_t_romloader_options.t_sqi_options.tSpiCfg), uiSqiXipChipselect);
 
 			DEBUGMSG(ZONE_VERBOSE, "*** sending init seq ***\n");
 
 			/* init the address */
-			tQsiCfg.ulAddress = 0;
+			ptQsiCfg->ulAddress = 0;
 
 			/* set the checksum to something not 0 */
 			ulChecksum = 1;
@@ -659,7 +656,7 @@ TEST_RESULT_T boot_sqi_xip(unsigned long ulOffset, unsigned long ulSize, unsigne
 			ptAsicCtrlArea->ulIo_config2 = ulValue;
 #endif
 
-			iResult = execute_sequence(&tQsiCfg, g_t_romloader_options.t_sqi_options.tSeqId);
+			iResult = execute_sequence(ptQsiCfg, g_t_romloader_options.t_sqi_options.tSeqId);
 			if( iResult!=0 )
 			{
 				DEBUGMSG(ZONE_ERROR, "error executing the id sequence: %d\n", iResult);
@@ -668,7 +665,7 @@ TEST_RESULT_T boot_sqi_xip(unsigned long ulOffset, unsigned long ulSize, unsigne
 			else
 			{
 				DEBUGMSG(ZONE_VERBOSE, "*** sending read seq ***\n");
-				iResult = execute_sequence(&tQsiCfg, g_t_romloader_options.t_sqi_options.tSeqRead);
+				iResult = execute_sequence(ptQsiCfg, g_t_romloader_options.t_sqi_options.tSeqRead);
 				if( iResult!=0 )
 				{
 					DEBUGMSG(ZONE_ERROR, "error executing the read sequence: %d\n", iResult);
@@ -677,49 +674,56 @@ TEST_RESULT_T boot_sqi_xip(unsigned long ulOffset, unsigned long ulSize, unsigne
 				else
 				{
 					/* receive the complete bootblock */
-					tQsiCfg.tCfg.pfnReadSimpleChecksum(&(tQsiCfg.tCfg), aulBuffer, (sizeof(aulBuffer)/sizeof(aulBuffer[0])));
+					ptQsiCfg->tCfg.pfnReadSimpleChecksum(&(ptQsiCfg->tCfg), aulBuffer, (sizeof(aulBuffer)/sizeof(aulBuffer[0])));
 
 					/* deselect the chip and send idles */
-					tQsiCfg.tCfg.pfnSelect(&(tQsiCfg.tCfg), 0U);
-					tQsiCfg.tCfg.pfnSendIdle(&(tQsiCfg.tCfg), 0U);
+					ptQsiCfg->tCfg.pfnSelect(&(ptQsiCfg->tCfg), 0U);
+					ptQsiCfg->tCfg.pfnSendIdle(&(ptQsiCfg->tCfg), 0U);
 
-					/* activate the sqi xip unit */
-					ptSqiArea->ulSqi_sqirom_cfg = tQsiCfg.ulSqiRomCfg;
-
-//					hexdump(pucSqiXipAddress+ulOffset, ulSize);
-					memcpy(pucBuffer, pucSqiXipAddress+ulOffset, ulSize);
+					/* Activate the SQI XIP unit. */
+					ptSqiArea->ulSqi_sqirom_cfg = ptQsiCfg->ulSqiRomCfg;
 
 					tResult = TEST_RESULT_OK;
 				}
-
-				/* deselect the chip and send idles */
-				tQsiCfg.tCfg.pfnSelect(&(tQsiCfg.tCfg), 0U);
-				tQsiCfg.tCfg.pfnSendIdle(&(tQsiCfg.tCfg), 0U);
-
-				/* deactivate the sqi xip unit */
-				ptSqiArea->ulSqi_sqirom_cfg = 0;
-
-				DEBUGMSG(ZONE_VERBOSE, "*** sending deactivate seq ***\n");
-				iResult = execute_sequence(&tQsiCfg, g_t_romloader_options.t_sqi_options.tSeqDeactivate);
-				if( iResult!=0 )
-				{
-					DEBUGMSG(ZONE_ERROR, "error executing the deactivate sequence: %d\n", iResult);
-				}
 			}
-
-			/* nothing found, deactivate the unit */
-			tQsiCfg.tCfg.pfnDeactivate(&(tQsiCfg.tCfg));
-
-#if ASIC_TYP==56
-			/* This is netX56 specific: Disable the SQI ROM pins. */
-			ulValue  = ptAsicCtrlArea->ulIo_config2;
-			ulValue &= ~HOSTMSK(io_config2_sel_sqi);
-			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
-			ptAsicCtrlArea->ulIo_config2 = ulValue;
-#endif
 		}
 	}
 
 	return tResult;
+}
+
+
+void deactivate_sqi(QSI_CFG_T *ptQsiCfg)
+{
+	HOSTDEF(ptSqiArea);
+	HOSTDEF(ptAsicCtrlArea);
+	unsigned long ulValue;
+	int iResult;
+
+
+	/* Deselect the chip and send idles. */
+	ptQsiCfg->tCfg.pfnSelect(&(ptQsiCfg->tCfg), 0U);
+	ptQsiCfg->tCfg.pfnSendIdle(&(ptQsiCfg->tCfg), 0U);
+
+	/* Deactivate the SQI XIP unit. */
+	ptSqiArea->ulSqi_sqirom_cfg = 0;
+
+	DEBUGMSG(ZONE_VERBOSE, "*** sending deactivate sequence ***\n");
+	iResult = execute_sequence(ptQsiCfg, g_t_romloader_options.t_sqi_options.tSeqDeactivate);
+	if( iResult!=0 )
+	{
+		DEBUGMSG(ZONE_ERROR, "error executing the deactivate sequence: %d\n", iResult);
+	}
+
+	/* Deactivate the unit */
+	ptQsiCfg->tCfg.pfnDeactivate(&(ptQsiCfg->tCfg));
+
+#if ASIC_TYP==56
+	/* This is netX56 specific: Disable the SQI ROM pins. */
+	ulValue  = ptAsicCtrlArea->ulIo_config2;
+	ulValue &= ~HOSTMSK(io_config2_sel_sqi);
+	ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+	ptAsicCtrlArea->ulIo_config2 = ulValue;
+#endif
 }
 
