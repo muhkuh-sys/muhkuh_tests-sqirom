@@ -96,6 +96,16 @@ SERIAL_COMM_UI_FN_T tSerialVectors;
 
 /*-----------------------------------*/
 
+/* This is the VT100 command sequence for move cursor to upper left corner.
+ * Taken from http://ascii-table.com/ansi-escape-sequences-vt-100.php .
+ */
+static const char acVT100_Home[4] = {
+	0x1b,
+	0x5b,
+	'f',
+	0
+};
+
 void test_main(void) __attribute__((noreturn));
 void test_main(void)
 {
@@ -103,6 +113,7 @@ void test_main(void)
 	QSI_CFG_T tQsiCfg;
 	/* the load address of an SQI XIP image must be at the start of SQI ROM right after the boot block */
 	const unsigned char * const pucSqiXipAddress = (const unsigned char * const)(HOSTADDR(sqirom));
+	unsigned long ulLoopCounter;
 
 
 	systime_init();
@@ -126,10 +137,13 @@ void test_main(void)
 	}
 	else
 	{
+		ulLoopCounter = 0;
 		while(1)
 		{
-			uprintf("\fSQI ROM:\n");
+			uprintf(acVT100_Home);
 			hexdump(pucSqiXipAddress, 512);
+			uprintf("0x%08x", ulLoopCounter);
+			++ulLoopCounter;
 		}
 	}
 }
