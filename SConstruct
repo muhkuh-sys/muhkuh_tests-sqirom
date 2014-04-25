@@ -78,13 +78,20 @@ SConscript('platform/SConscript')
 Import('platform_lib_netx500', 'platform_lib_netx56', 'platform_lib_netx50', 'platform_lib_netx10')
 
 
-def build_netx56_standalone(tEnvBase, strBuildFolder, strOptionSource):
+def build_netx56_muhkuh(tEnvBase, strBuildFolder, strOptionSource, tPlatformLib):
 	tEnv = tEnvBase.Clone()
-	tEnv.Replace(LDFILE = 'src/netx56/netx56.ld')
-	tEnv.Append(CPPPATH = aCppPath)
-	tEnv.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
 	tSrc = tEnv.SetBuildPath(os.path.join('targets', strBuildFolder), 'src', sources_common+sources_standalone+strOptionSource)
-	tElf = tEnv.Elf(os.path.join('targets', strBuildFolder, 'sqitest.elf'), tSrc + platform_lib_netx56)
+	tElf = tEnv.Elf(os.path.join('targets', strBuildFolder, 'sqitest.elf'), tSrc + tPlatformLib)
+	tBin = tEnv.ObjCopy(os.path.join('targets', strBuildFolder, 'sqitest.bin'), tElf)
+	
+	return tBin
+
+
+
+def build_netx56_standalone(tEnvBase, strBuildFolder, strOptionSource, tPlatformLib):
+	tEnv = tEnvBase.Clone()
+	tSrc = tEnv.SetBuildPath(os.path.join('targets', strBuildFolder), 'src', sources_common+sources_standalone+strOptionSource)
+	tElf = tEnv.Elf(os.path.join('targets', strBuildFolder, 'sqitest.elf'), tSrc + tPlatformLib)
 	
 	return tElf
 
@@ -95,21 +102,18 @@ def build_netx56_standalone(tEnvBase, strBuildFolder, strOptionSource):
 #
 aCppPath = ['src', '#platform/src', '#platform/src/lib']
 
-env_netx56_m = env_netx56_default.Clone()
-env_netx56_m.Replace(LDFILE = 'src/netx56/netx56.ld')
-env_netx56_m.Append(CPPPATH = aCppPath)
-env_netx56_m.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-src_netx56_m = env_netx56_m.SetBuildPath('targets/netx56_muhkuh', 'src', sources_common+sources_muhkuh+'src/options_default.c')
-elf_netx56_m = env_netx56_m.Elf('targets/netx56_muhkuh/sqitest.elf', src_netx56_m + platform_lib_netx56)
-bin_netx56_m = env_netx56_m.ObjCopy('targets/netx56_muhkuh/sqitest.bin', elf_netx56_m)
+tEnv_netx56 = env_netx56_default.Clone()
+tEnv_netx56.Replace(LDFILE = 'src/netx56/netx56.ld')
+tEnv_netx56.Append(CPPPATH = aCppPath)
+tEnv_netx56.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
 
-env_netx56_s = env_netx56_default.Clone()
-env_netx56_s.Replace(LDFILE = 'src/netx56/netx56.ld')
-env_netx56_s.Append(CPPPATH = aCppPath)
-env_netx56_s.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-src_netx56_s = env_netx56_s.SetBuildPath('targets/netx56_standalone', 'src', sources_common+sources_standalone+'src/options_default.c')
-elf_netx56_s = env_netx56_s.Elf('targets/netx56_standalone/sqitest.elf', src_netx56_s + platform_lib_netx56)
-bb0_netx56_s = env_netx56_s.BootBlock('targets/netx56_spi_intram.img', elf_netx56_s, BOOTBLOCK_SRC='SPI_GEN_10', BOOTBLOCK_DST='INTRAM')
 
-build_netx56_standalone(env_netx56_default, 'netx56_standalone_MX25L3235E', 'src/options_default_MX25L3235E.c')
+build_netx56_muhkuh(tEnv_netx56, 'netx56_muhkuh_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
 
+tElf_netx56_W25Q32_s = build_netx56_standalone(tEnv_netx56, 'netx56_standalone_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
+bb0_netx56_s = tEnv_netx56.BootBlock('targets/sqirom_test_netx56_W25Q32.img', tElf_netx56_W25Q32_s, BOOTBLOCK_SRC='SPI_GEN_10', BOOTBLOCK_DST='INTRAM')
+
+tElf_netx56_MX25L3235E_s = build_netx56_standalone(tEnv_netx56, 'netx56_standalone_MX25L3235E', 'src/options_default_MX25L3235E.c', platform_lib_netx56)
+
+tElf_netx56_N25Q032A_s = build_netx56_standalone(tEnv_netx56, 'netx56_standalone_N25Q032A', 'src/options_default_N25Q032A.c', platform_lib_netx56)
+bb0_netx56_s = tEnv_netx56.BootBlock('targets/sqirom_test_netx56_N25Q032A.img', tElf_netx56_N25Q032A_s, BOOTBLOCK_SRC='SPI_GEN_10', BOOTBLOCK_DST='INTRAM')
