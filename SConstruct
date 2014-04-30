@@ -89,11 +89,11 @@ env_default.Version('targets/version/version.h', 'templates/version.h')
 
 #----------------------------------------------------------------------------
 
-def build_netx56_muhkuh(tEnvBase, strBuildFolder, strOptionSource, tPlatformLib):
+def build_netx56_muhkuh(tEnvBase, strBuildId, strOptionSource, tPlatformLib):
 	tEnv = tEnvBase.Clone()
-	tSrc = tEnv.SetBuildPath(os.path.join('targets', strBuildFolder), 'src', sources_common+sources_standalone+strOptionSource)
-	tElf = tEnv.Elf(os.path.join('targets', strBuildFolder, 'sqitest.elf'), tSrc + tPlatformLib)
-	tBin = tEnv.ObjCopy(os.path.join('targets', strBuildFolder, 'sqitest.bin'), tElf)
+	tSrc = tEnv.SetBuildPath(os.path.join('targets', strBuildId), 'src', sources_common+sources_standalone+strOptionSource)
+	tElf = tEnv.Elf(os.path.join('targets', strBuildId, 'sqitest.elf'), tSrc + tPlatformLib)
+	tBin = tEnv.ObjCopy(os.path.join('targets', strBuildId+'.bin'), tElf)
 	
 	return tBin
 
@@ -119,8 +119,8 @@ tEnv_netx56.Append(CPPPATH = aCppPath)
 tEnv_netx56.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
 
 
-build_netx56_muhkuh(tEnv_netx56, 'sqirom_test_Winbond_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
-build_netx56_muhkuh(tEnv_netx56, 'sqirom_test_Micron_N25Q032A', 'src/options_default_N25Q032A.c', platform_lib_netx56)
+build_netx56_muhkuh(tEnv_netx56, 'sqirom_test_netx56_Winbond_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
+build_netx56_muhkuh(tEnv_netx56, 'sqirom_test_netx56_Micron_N25Q032A', 'src/options_default_N25Q032A.c', platform_lib_netx56)
 
 
 tElf_netx56_W25Q32_s = build_netx56_standalone(tEnv_netx56, 'netx56_standalone_Winbond_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
