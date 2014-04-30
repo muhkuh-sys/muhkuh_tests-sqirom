@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2010 by Christoph Thelen                                *
+ *   Copyright (C) 2013 by Christoph Thelen                                *
  *   doc_bacardi@users.sourceforge.net                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -19,23 +19,28 @@
  ***************************************************************************/
 
 
-	.section .header, "a"
-	.arm
+#ifndef __HEADER_H__
+#define __HEADER_H__
 
-	.extern load_address
-	.extern start
 
-@--------------------------------------
+typedef unsigned long (*PFN_START)(unsigned long ulParameter);
 
-	.ascii "mooh"
-	.word 0x00010000
+typedef struct VERSION_HEADER_STRUCT
+{
+	char acMagic[4];
+	unsigned long ulVersion;
 
-	.word load_address
-	.word start
-	.word parameter_start_address
-	.word parameter_end_address
+	unsigned long *pulLoadAddress;
+	PFN_START pfnExecutionAddress;
+	unsigned long *pulParameterStart;
+	unsigned long *pulParameterEnd;
 
-@--------------------------------------
+	unsigned long ulVersionMaj;
+	unsigned long ulVersionMin;
+	const char    acVersionVcs[16];
+} VERSION_HEADER_T;
 
-  .end
+extern const VERSION_HEADER_T tVersionHeader __attribute__ ((section (".header")));
 
+
+#endif  /* __HEADER_H__ */

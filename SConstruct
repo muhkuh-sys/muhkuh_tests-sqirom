@@ -37,7 +37,7 @@ sources_common = """
 	src/boot_drv_sqi.c
 	src/boot_spi.c
 	src/boot_sqi_xip.c
-	src/header.S
+	src/header.c
 """
 
 sources_muhkuh = """
@@ -78,6 +78,17 @@ SConscript('platform/SConscript')
 Import('platform_lib_netx500', 'platform_lib_netx56', 'platform_lib_netx50', 'platform_lib_netx10')
 
 
+
+#----------------------------------------------------------------------------
+#
+# Get the source code version from the VCS.
+#
+env_default.Version('targets/version/version.h', 'templates/version.h')
+
+
+
+#----------------------------------------------------------------------------
+
 def build_netx56_muhkuh(tEnvBase, strBuildFolder, strOptionSource, tPlatformLib):
 	tEnv = tEnvBase.Clone()
 	tSrc = tEnv.SetBuildPath(os.path.join('targets', strBuildFolder), 'src', sources_common+sources_standalone+strOptionSource)
@@ -100,7 +111,7 @@ def build_netx56_standalone(tEnvBase, strBuildFolder, strOptionSource, tPlatform
 #
 # Build all files.
 #
-aCppPath = ['src', '#platform/src', '#platform/src/lib']
+aCppPath = ['src', '#platform/src', '#platform/src/lib', '#targets/version']
 
 tEnv_netx56 = env_netx56_default.Clone()
 tEnv_netx56.Replace(LDFILE = 'src/netx56/netx56.ld')
@@ -108,13 +119,15 @@ tEnv_netx56.Append(CPPPATH = aCppPath)
 tEnv_netx56.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
 
 
-build_netx56_muhkuh(tEnv_netx56, 'netx56_muhkuh_Winbond_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
-build_netx56_muhkuh(tEnv_netx56, 'netx56_muhkuh_Micron_N25Q032A', 'src/options_default_N25Q032A.c', platform_lib_netx56)
+build_netx56_muhkuh(tEnv_netx56, 'sqirom_test_Winbond_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
+build_netx56_muhkuh(tEnv_netx56, 'sqirom_test_Micron_N25Q032A', 'src/options_default_N25Q032A.c', platform_lib_netx56)
 
-tElf_netx56_W25Q32_s = build_netx56_standalone(tEnv_netx56, 'netx56_standalone_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
-bb0_netx56_s = tEnv_netx56.BootBlock('targets/sqirom_test_netx56_W25Q32.img', tElf_netx56_W25Q32_s, BOOTBLOCK_SRC='SPI_GEN_10', BOOTBLOCK_DST='INTRAM')
 
-tElf_netx56_MX25L3235E_s = build_netx56_standalone(tEnv_netx56, 'netx56_standalone_MX25L3235E', 'src/options_default_MX25L3235E.c', platform_lib_netx56)
+tElf_netx56_W25Q32_s = build_netx56_standalone(tEnv_netx56, 'netx56_standalone_Winbond_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
+bb0_netx56_s = tEnv_netx56.BootBlock('targets/sqirom_test_standalone_netx56_Winbond_W25Q32.img', tElf_netx56_W25Q32_s, BOOTBLOCK_SRC='SPI_GEN_10', BOOTBLOCK_DST='INTRAM')
 
-tElf_netx56_N25Q032A_s = build_netx56_standalone(tEnv_netx56, 'netx56_standalone_N25Q032A', 'src/options_default_N25Q032A.c', platform_lib_netx56)
-bb0_netx56_s = tEnv_netx56.BootBlock('targets/sqirom_test_netx56_N25Q032A.img', tElf_netx56_N25Q032A_s, BOOTBLOCK_SRC='SPI_GEN_10', BOOTBLOCK_DST='INTRAM')
+tElf_netx56_MX25L3235E_s = build_netx56_standalone(tEnv_netx56, 'netx56_standalone_Macronix_MX25L3235E', 'src/options_default_MX25L3235E.c', platform_lib_netx56)
+bb1_netx56_s = tEnv_netx56.BootBlock('targets/sqirom_test_standalone_netx56_Macronix_MX25L3235E.img', tElf_netx56_MX25L3235E_s, BOOTBLOCK_SRC='SPI_GEN_10', BOOTBLOCK_DST='INTRAM')
+
+tElf_netx56_N25Q032A_s = build_netx56_standalone(tEnv_netx56, 'netx56_standalone_Micron_N25Q032A', 'src/options_default_N25Q032A.c', platform_lib_netx56)
+bb2_netx56_s = tEnv_netx56.BootBlock('targets/sqirom_test_standalone_netx56_Micron_N25Q032A.img', tElf_netx56_N25Q032A_s, BOOTBLOCK_SRC='SPI_GEN_10', BOOTBLOCK_DST='INTRAM')
