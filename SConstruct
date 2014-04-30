@@ -91,7 +91,7 @@ env_default.Version('targets/version/version.h', 'templates/version.h')
 
 def build_netx56_muhkuh(tEnvBase, strBuildId, strOptionSource, tPlatformLib):
 	tEnv = tEnvBase.Clone()
-	tSrc = tEnv.SetBuildPath(os.path.join('targets', strBuildId), 'src', sources_common+sources_standalone+strOptionSource)
+	tSrc = tEnv.SetBuildPath(os.path.join('targets', strBuildId), 'src', sources_common+sources_muhkuh+strOptionSource)
 	tElf = tEnv.Elf(os.path.join('targets', strBuildId, 'sqitest.elf'), tSrc + tPlatformLib)
 	tBin = tEnv.ObjCopy(os.path.join('targets', strBuildId+'.bin'), tElf)
 	
@@ -119,8 +119,8 @@ tEnv_netx56.Append(CPPPATH = aCppPath)
 tEnv_netx56.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
 
 
-build_netx56_muhkuh(tEnv_netx56, 'sqirom_test_netx56_Winbond_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
-build_netx56_muhkuh(tEnv_netx56, 'sqirom_test_netx56_Micron_N25Q032A', 'src/options_default_N25Q032A.c', platform_lib_netx56)
+tBin0 = build_netx56_muhkuh(tEnv_netx56, 'sqirom_test_netx56_Winbond_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
+tBin1 = build_netx56_muhkuh(tEnv_netx56, 'sqirom_test_netx56_Micron_N25Q032A', 'src/options_default_N25Q032A.c', platform_lib_netx56)
 
 
 tElf_netx56_W25Q32_s = build_netx56_standalone(tEnv_netx56, 'netx56_standalone_Winbond_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
@@ -131,3 +131,14 @@ bb1_netx56_s = tEnv_netx56.BootBlock('targets/sqirom_test_standalone_netx56_Macr
 
 tElf_netx56_N25Q032A_s = build_netx56_standalone(tEnv_netx56, 'netx56_standalone_Micron_N25Q032A', 'src/options_default_N25Q032A.c', platform_lib_netx56)
 bb2_netx56_s = tEnv_netx56.BootBlock('targets/sqirom_test_standalone_netx56_Micron_N25Q032A.img', tElf_netx56_N25Q032A_s, BOOTBLOCK_SRC='SPI_GEN_10', BOOTBLOCK_DST='INTRAM')
+
+
+#----------------------------------------------------------------------------
+#
+# Make a local demo installation.
+#
+# Copy all binaries.
+Command('targets/testbench/netx/sqirom_test_netx56_Winbond_W25Q32.bin', tBin0, Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/sqirom_test_netx56_Micron_N25Q032A',    tBin1, Copy("$TARGET", "$SOURCE"))
+
+
