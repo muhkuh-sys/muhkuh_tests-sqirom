@@ -108,7 +108,8 @@ tEnv_netx56.Append(CPPPATH = aCppPath)
 tEnv_netx56.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
 
 
-build_netx56_muhkuh(tEnv_netx56, 'netx56_muhkuh_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
+build_netx56_muhkuh(tEnv_netx56, 'netx56_muhkuh_Winbond_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
+build_netx56_muhkuh(tEnv_netx56, 'netx56_muhkuh_Micron_N25Q032A', 'src/options_default_N25Q032A.c', platform_lib_netx56)
 
 tElf_netx56_W25Q32_s = build_netx56_standalone(tEnv_netx56, 'netx56_standalone_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
 bb0_netx56_s = tEnv_netx56.BootBlock('targets/sqirom_test_netx56_W25Q32.img', tElf_netx56_W25Q32_s, BOOTBLOCK_SRC='SPI_GEN_10', BOOTBLOCK_DST='INTRAM')
