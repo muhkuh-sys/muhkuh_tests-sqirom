@@ -96,15 +96,45 @@ SERIAL_COMM_UI_FN_T tSerialVectors;
 
 /*-----------------------------------*/
 
-/* This is the VT100 command sequence for move cursor to upper left corner.
- * Taken from http://ascii-table.com/ansi-escape-sequences-vt-100.php .
- */
-static const char acVT100_Home[4] = {
-	0x1b,
-	0x5b,
-	'f',
-	0
-};
+
+static TEST_RESULT_T test_prn_sequence(const unsigned long *pulStart, const unsigned long *pulEnd)
+{
+	unsigned long ulPrn_inc;
+	unsigned long ulPrn_reg;
+	const unsigned long *pulCnt;
+	unsigned long ulRead;
+	TEST_RESULT_T tResult;
+	
+	
+	/* Be optimistic. */
+	tResult = TEST_RESULT_OK;
+	
+	/* Loop over the complete test data. */
+	pulCnt = pulStart;
+	ulPrn_reg = *(pulCnt++);
+	ulPrn_inc = *(pulCnt++);
+	while( pulCnt<pulEnd )
+	{
+		ulPrn_reg += ulPrn_inc;
+		ulRead = *pulCnt;
+		if( ulPrn_reg!=ulRead )
+		{
+			uprintf("!!! Error at address 0x%08x!!!\n", (unsigned long)pulCnt);
+			uprintf("Expected: 0x%08x\n", ulPrn_reg);
+			uprintf("Read:     0x%08x\n", ulRead);
+			tResult = TEST_RESULT_ERROR;
+			break;
+		}
+		pulCnt++;
+	}
+	
+	return tResult;
+}
+
+
+
+extern unsigned char _binary_test_bin_end[];
+extern unsigned char _binary_test_bin_start[];
 
 void test_main(void) __attribute__((noreturn));
 void test_main(void)
@@ -112,8 +142,10 @@ void test_main(void)
 	TEST_RESULT_T tTestResult;
 	QSI_CFG_T tQsiCfg;
 	/* the load address of an SQI XIP image must be at the start of SQI ROM right after the boot block */
-	const unsigned char * const pucSqiXipAddress = (const unsigned char * const)(HOSTADDR(sqirom));
-	unsigned long ulLoopCounter;
+	const unsigned long * const pulSqiXipDataStart = (const unsigned long * const)(HOSTADDR(sqirom) + 64);
+	const unsigned long * const pulSqiXipDataEnd   = (const unsigned long * const)(HOSTADDR(sqirom) + 64 + (((unsigned long)_binary_test_bin_end)-((unsigned long)_binary_test_bin_start)));
+	unsigned long ulTestCounter;
+	BLINKI_HANDLE_T tBlinki;
 
 
 	systime_init();
@@ -137,14 +169,29 @@ void test_main(void)
 	}
 	else
 	{
-		ulLoopCounter = 0;
-		while(1)
+		ulTestCounter = 0;
+		/* Fast green blinking   *_G   */
+		rdy_run_blinki_init(&tBlinki, 1, 5);
+		
+		while( tTestResult==TEST_RESULT_OK )
 		{
-			uprintf(acVT100_Home);
-			hexdump(pucSqiXipAddress, 512);
-			uprintf("0x%08x", ulLoopCounter);
-			++ulLoopCounter;
+			uprintf("test run %d\n", ulTestCounter);
+			rdy_run_blinki(&tBlinki);
+			
+			/* Test the complete test data. */
+			tTestResult = test_prn_sequence(pulSqiXipDataStart, pulSqiXipDataEnd);
+			if( tTestResult==TEST_RESULT_OK )
+			{
+				++ulTestCounter;
+			}
+			else
+			{
+				rdy_run_setLEDs(RDYRUN_YELLOW);
+			}
 		}
+		
+		uprintf("Stop!\n");
+		while(1) {};
 	}
 }
 

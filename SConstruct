@@ -89,6 +89,25 @@ env_default.Version('targets/version/version.h', 'templates/version.h')
 
 
 #----------------------------------------------------------------------------
+#
+# This is a helper function which generates a sequence of pseudo random
+# numbers.
+#
+def prn_obj(tEnv, sizSequence, strPrnBinFilename):
+	# Convert the size into a "long" to prevent floats.
+	ulSequenceSize = long(sizSequence)
+	
+	# Generate the sequence.
+	tPrnBin = tEnv.Prn(strPrnBinFilename, None, PRN_SIZE=ulSequenceSize)
+	
+	# Convert the binary file into an object.
+	strLabelPath = strPrnBinFilename.replace('/', '_').replace('.', '_').replace('\\', '_')
+	strOutput = os.path.splitext(strPrnBinFilename)[0] + tEnv['OBJSUFFIX']
+	strCmd = '"$OBJCOPY" -v -I binary -O elf32-littlearm -B ARM --rename-section .data=.prn_rodata --redefine-sym "_binary_%s_start"="_binary_test_bin_start" --redefine-sym "_binary_%s_end"="_binary_test_bin_end" $SOURCE $TARGET' % (strLabelPath, strLabelPath)
+	return tEnv.Command(strOutput, tPrnBin, strCmd)
+
+
+#----------------------------------------------------------------------------
 
 def build_netx56_muhkuh(tEnvBase, strBuildId, strOptionSource, tPlatformLib):
 	tEnv = tEnvBase.Clone()
@@ -103,7 +122,8 @@ def build_netx56_muhkuh(tEnvBase, strBuildId, strOptionSource, tPlatformLib):
 def build_netx56_standalone(tEnvBase, strBuildFolder, strOptionSource, tPlatformLib):
 	tEnv = tEnvBase.Clone()
 	tSrc = tEnv.SetBuildPath(os.path.join('targets', strBuildFolder), 'src', sources_common+sources_standalone+strOptionSource)
-	tElf = tEnv.Elf(os.path.join('targets', strBuildFolder, 'sqitest.elf'), tSrc + tPlatformLib)
+	tPrn = prn_obj(tEnv, 0x00008000, os.path.join('targets', strBuildFolder, 'prn_128k.bin'))
+	tElf = tEnv.Elf(os.path.join('targets', strBuildFolder, 'sqitest.elf'), tSrc + tPlatformLib + tPrn)
 	
 	return tElf
 
@@ -120,8 +140,10 @@ tEnv_netx56.Append(CPPPATH = aCppPath)
 tEnv_netx56.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
 
 
-tBin0 = build_netx56_muhkuh(tEnv_netx56, 'sqirom_test_netx56_Winbond_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
-tBin1 = build_netx56_muhkuh(tEnv_netx56, 'sqirom_test_netx56_Micron_N25Q032A', 'src/options_default_N25Q032A.c', platform_lib_netx56)
+tBin0 = build_netx56_muhkuh(tEnv_netx56, 'sqirom_test_netx56_Winbond_W25Q32',      'src/options_default_W25Q32.c',     platform_lib_netx56)
+tBin1 = build_netx56_muhkuh(tEnv_netx56, 'sqirom_test_netx56_Micron_N25Q032A',     'src/options_default_N25Q032A.c',   platform_lib_netx56)
+tBin2 = build_netx56_muhkuh(tEnv_netx56, 'sqirom_test_netx56_Macronix_MX25L3235E', 'src/options_default_MX25L3235E.c', platform_lib_netx56)
+tBin3 = build_netx56_muhkuh(tEnv_netx56, 'sqirom_test_netx56_Macronix_MX25L3273F', 'src/options_default_MX25L3273F.c', platform_lib_netx56)
 
 
 tElf_netx56_W25Q32_s = build_netx56_standalone(tEnv_netx56, 'netx56_standalone_Winbond_W25Q32', 'src/options_default_W25Q32.c', platform_lib_netx56)
@@ -133,13 +155,17 @@ bb1_netx56_s = tEnv_netx56.BootBlock('targets/sqirom_test_standalone_netx56_Macr
 tElf_netx56_N25Q032A_s = build_netx56_standalone(tEnv_netx56, 'netx56_standalone_Micron_N25Q032A', 'src/options_default_N25Q032A.c', platform_lib_netx56)
 bb2_netx56_s = tEnv_netx56.BootBlock('targets/sqirom_test_standalone_netx56_Micron_N25Q032A.img', tElf_netx56_N25Q032A_s, BOOTBLOCK_SRC='SPI_GEN_10', BOOTBLOCK_DST='INTRAM')
 
+tElf_netx56_MX25L3273F_s = build_netx56_standalone(tEnv_netx56, 'netx56_standalone_Macronix_MX25L3273F', 'src/options_default_MX25L3273F.c', platform_lib_netx56)
+bb3_netx56_s = tEnv_netx56.BootBlock('targets/sqirom_test_standalone_netx56_Macronix_MX25L3273F.img', tElf_netx56_MX25L3273F_s, BOOTBLOCK_SRC='SPI_GEN_10', BOOTBLOCK_DST='INTRAM')
+
 
 #----------------------------------------------------------------------------
 #
 # Make a local demo installation.
 #
 # Copy all binaries.
-Command('targets/testbench/netx/sqirom_test_netx56_Winbond_W25Q32.bin', tBin0, Copy("$TARGET", "$SOURCE"))
-Command('targets/testbench/netx/sqirom_test_netx56_Micron_N25Q032A',    tBin1, Copy("$TARGET", "$SOURCE"))
-
+Command('targets/testbench/netx/sqirom_test_netx56_Winbond_W25Q32.bin',  tBin0, Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/sqirom_test_netx56_Micron_N25Q032A',     tBin1, Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/sqirom_test_netx56_Macronix_MX25L3235E', tBin2, Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/sqirom_test_netx56_Macronix_MX25L3273F', tBin3, Copy("$TARGET", "$SOURCE"))
 

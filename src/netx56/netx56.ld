@@ -38,10 +38,16 @@ SECTIONS
 	} >IOVECTORS
 
 
-	.code ORIGIN(INTRAM) :
+	.prn ORIGIN(INTRAM) :
 	{
 		load_address = . ;
 
+		*(.prn_rodata)
+	} >INTRAM
+
+
+	.code :
+	{
 		KEEP(*(.header))
 		*(.init_code)
 		*(.text*)
