@@ -42,13 +42,13 @@ SECTIONS
 	{
 		load_address = . ;
 
+		KEEP(*(.header))
 		*(.prn_rodata)
 	} >INTRAM
 
 
 	.code :
 	{
-		KEEP(*(.header))
 		*(.init_code)
 		*(.text*)
 		*(.rodata*)

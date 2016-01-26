@@ -4,6 +4,7 @@
 #include "netx_io_areas.h"
 
 #include "boot_sqi_xip.h"
+#include "header.h"
 #include "main.h"
 #include "rdy_run.h"
 #include "netx_test.h"
@@ -142,8 +143,8 @@ void test_main(void)
 	TEST_RESULT_T tTestResult;
 	QSI_CFG_T tQsiCfg;
 	/* the load address of an SQI XIP image must be at the start of SQI ROM right after the boot block */
-	const unsigned long * const pulSqiXipDataStart = (const unsigned long * const)(HOSTADDR(sqirom) + 64);
-	const unsigned long * const pulSqiXipDataEnd   = (const unsigned long * const)(HOSTADDR(sqirom) + 64 + (((unsigned long)_binary_test_bin_end)-((unsigned long)_binary_test_bin_start)));
+	const unsigned long * const pulSqiXipDataStart = (const unsigned long * const)(HOSTADDR(sqirom) + 64 + sizeof(VERSION_HEADER_T));
+	const unsigned long * const pulSqiXipDataEnd   = (const unsigned long * const)(HOSTADDR(sqirom) + 64 + sizeof(VERSION_HEADER_T) + (((unsigned long)_binary_test_bin_end)-((unsigned long)_binary_test_bin_start)));
 	unsigned long ulTestCounter;
 	BLINKI_HANDLE_T tBlinki;
 
