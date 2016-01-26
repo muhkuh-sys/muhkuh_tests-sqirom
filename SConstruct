@@ -55,16 +55,16 @@ sources_standalone = """
 #
 # Create the compiler environments.
 #
-env_netx500_default = env_default.CreateCompilerEnv('500', ['cpu=arm926ej-s'])
+env_netx500_default = env_default.CreateCompilerEnv('500', ['arch=armv5te'])
 env_netx500_default.Replace(BOOTBLOCK_CHIPTYPE = 500)
 
-env_netx56_default = env_default.CreateCompilerEnv('56', ['cpu=arm966e-s'])
+env_netx56_default = env_default.CreateCompilerEnv('56', ['arch=armv5te'])
 env_netx56_default.Replace(BOOTBLOCK_CHIPTYPE = 56)
 
-env_netx50_default = env_default.CreateCompilerEnv('50', ['cpu=arm966e-s'])
+env_netx50_default = env_default.CreateCompilerEnv('50', ['arch=armv5te'])
 env_netx50_default.Replace(BOOTBLOCK_CHIPTYPE = 50)
 
-env_netx10_default = env_default.CreateCompilerEnv('10', ['cpu=arm966e-s'])
+env_netx10_default = env_default.CreateCompilerEnv('10', ['arch=armv5te'])
 env_netx10_default.Replace(BOOTBLOCK_CHIPTYPE = 10)
 
 Export('env_netx500_default', 'env_netx56_default', 'env_netx50_default', 'env_netx10_default')
