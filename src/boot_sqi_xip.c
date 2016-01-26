@@ -604,7 +604,6 @@ TEST_RESULT_T boot_sqi_xip(QSI_CFG_T *ptQsiCfg)
 	TEST_RESULT_T tResult;
 	unsigned long ulValue;
 	int iResult;
-	unsigned long ulChecksum;
 	/* the chip select is fixed to 0 */
 	const unsigned int uiSqiXipChipselect = 0;
 
@@ -644,9 +643,6 @@ TEST_RESULT_T boot_sqi_xip(QSI_CFG_T *ptQsiCfg)
 
 			/* init the address */
 			ptQsiCfg->ulAddress = 0;
-
-			/* set the checksum to something not 0 */
-			ulChecksum = 1;
 
 #if ASIC_TYP==56
 			/* This is netX56 specific: Enable the SQI ROM pins. */
